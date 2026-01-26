@@ -2,41 +2,42 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/wait.h>
 #include <unistd.h>
+#include <sys/wait.h>
+#include <string.h>
 
 int main(void) {
-  char *line = NULL;
+  char* line = NULL;
   size_t len = 0;
 
-  while (1) {
+  while(1) {
     printf("Enter the full path of a program to be run: \n");
 
-    if (getline(&line, &len, stdin) == -1) {
+    if(getline(&line, &len, stdin) == -1) {
       break;
     }
 
-    char *saveptr;
-    char *prog = strtok_r(line, " \t\n", &saveptr);
+    char* saveptr;
+    char* cmd = strtok_r(line, " \t\n", &saveptr);
 
-    if (prog == NULL) {
+    if(cmd == NULL) {
       continue;
     }
 
     pid_t pid = fork();
 
-    if (pid < 0) {
+    if(pid < 0) {
       perror("fork");
       continue;
     }
 
     if (pid == 0) {
-      execl(prog, prog, (char *)NULL);
+      execl(cmd, cmd, (char*)NULL);
 
       perror("execl");
       exit(EXIT_FAILURE);
-    } else {
+    }
+    else {
       waitpid(pid, NULL, 0);
     }
   }
