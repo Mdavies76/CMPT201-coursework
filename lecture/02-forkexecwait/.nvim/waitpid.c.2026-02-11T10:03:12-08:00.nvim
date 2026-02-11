@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <sys/wait.h>
+
+int main() {
+  pid_t pid = fork(); 
+  if (pid == 0) {
+    if (execl("/bin/ls", "/bin/ls", "-a", "-l", NULL) == -1) {
+      perror("execl");
+      exit(EXIT_FAILURE);
+  }
+  else {
+    int wstatus = 0;
+    if (waitpid(pid, &wstatus, 0) == -1) {
+      perror("waitpid");
+      exit(EXIT_FAILURE);
+    }
+    if (WIFEXITED(wstatus)) {
+      printf("Child finished with exit status: %d", WEXITSTATUS(wstatus));
+    }
+    else {
+      printf("Child did not exit normally");
+    }
+  }
+  return 0;
+}
