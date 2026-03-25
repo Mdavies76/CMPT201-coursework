@@ -1,0 +1,70 @@
+// This is the server
+//
+#include <arpa/inet.h>
+#include <errno.h>
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+
+int main() {
+  printf("SERVER:\n");
+
+  // socket
+  int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (socket_fd == -1) {
+    perror("socket failure");
+    exit(EXIT_FAILURE);
+  }
+
+  // remove any existing sockets
+  if (remove("socket_fun") == -1 && errno != ENOENT) {
+    perror("remove failure");
+    exit(EXIT_FAILURE);
+  }
+
+  // bind
+  struct sockaddr_in sockstruct;
+  memset(&sockstruct, 0, sizeof(struct sockaddr_in));
+  sockstruct.sin_family = AF_INET;
+  sockstruct.sin_port = htons(1042);
+  sockstruct.sin_addr.s_addr = htonl(INADDR_ANY);
+  // snprintf(sockstruct.sin_path, 108, "socket_fun");
+  if (bind(socket_fd, (struct sockaddr *)&sockstruct,
+           sizeof(struct sockaddr_in)) == -1) {
+    perror("bind failure");
+    exit(EXIT_FAILURE);
+  }
+
+  // listen
+  if (listen(socket_fd, 10) == -1) {
+    perror("listen failure");
+    exit(EXIT_FAILURE);
+  }
+
+  // accept
+  int connected_fd = accept(socket_fd, NULL, NULL);
+  if (connected_fd == -1) {
+    perror("accept failure");
+    exit(EXIT_FAILURE);
+  }
+
+  // read
+  const int SIZE = 1024;
+  char buff[SIZE];
+  int bytes_read = read(connected_fd, buff, SIZE);
+  if (bytes_read == -1) {
+    perror("read failure");
+    exit(EXIT_FAILURE);
+  }
+
+  write(STDOUT_FILENO, buff, bytes_read);
+
+  // close
+  close(connected_fd);
+  close(socket_fd);
+  return 0;
+}
